@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "github.com/ngyewch/protoc-gen-rsocket-go-example/pb";
+
+import "service1.proto";
+import "service2.proto";
+
+service TestService {
+  rpc Test(TestRequest) returns (TestResponse);
+  rpc Test2(stream TestRequest) returns (stream TestResponse);
+}
+
+service TestService2 {
+  rpc Test(TestRequest) returns (TestResponse);
+}

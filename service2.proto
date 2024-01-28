@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+option go_package = "github.com/ngyewch/protoc-gen-rsocket-go-example/pb/response/pb";
+
+message TestResponse {
+  string text = 1;
+}
