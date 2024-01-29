@@ -24,9 +24,9 @@ func (c *Client) Start(ctx context.Context) error {
 		}).
 		Acceptor(func(ctx context.Context, socket rsocket.RSocket) rsocket.RSocket {
 			return rsocket.NewAbstractSocket(
-				rsocket.RequestResponse(runtime.RSocketServerRequestResponseHandler(runtime.NewServers(
+				rsocket.RequestResponse(runtime.RSocketServerRequestResponseHandler(
 					pb.NewTestListenerServer(3, c),
-				))),
+				)),
 			)
 		}).
 		Transport(rsocket.TCPClient().

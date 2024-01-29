@@ -21,10 +21,6 @@ func New() *Server {
 }
 
 func (s *Server) Start(ctx context.Context) error {
-	servers := runtime.NewServers(
-		pb.NewTestServiceServer(0, newTestService1()),
-		pb.NewTestServiceServer(1, newTestService2()),
-	)
 	err := rsocket.Receive().
 		Acceptor(func(ctx context.Context, setup payload.SetupPayload, sendingSocket rsocket.CloseableRSocket) (rsocket.RSocket, error) {
 			ctx1, cancel := context.WithCancelCause(ctx)
@@ -50,7 +46,10 @@ func (s *Server) Start(ctx context.Context) error {
 				}
 			}()
 			return rsocket.NewAbstractSocket(
-				rsocket.RequestResponse(runtime.RSocketServerRequestResponseHandler(servers)),
+				rsocket.RequestResponse(runtime.RSocketServerRequestResponseHandler(
+					pb.NewTestServiceServer(0, newTestService1()),
+					pb.NewTestServiceServer(1, newTestService2()),
+				)),
 			), nil
 		}).
 		Transport(rsocket.TCPServer().SetAddr(":7878").Build()).
