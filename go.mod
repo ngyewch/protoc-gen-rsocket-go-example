@@ -2,10 +2,10 @@ module github.com/ngyewch/protoc-gen-rsocket-go-example
 
 go 1.21
 
-replace github.com/ngyewch/protoc-gen-rsocket-go => ../protoc-gen-rsocket-go
+//replace github.com/ngyewch/protoc-gen-rsocket-go => ../protoc-gen-rsocket-go
 
 require (
-	github.com/ngyewch/protoc-gen-rsocket-go v0.0.0-20240128084244-ff606372816c
+	github.com/ngyewch/protoc-gen-rsocket-go v0.1.0
 	github.com/rsocket/rsocket-go v0.8.12
 	github.com/samber/mo v1.11.0
 	github.com/spf13/cobra v1.8.0
