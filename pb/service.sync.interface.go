@@ -12,3 +12,6 @@ type TestService interface {
 type TestService2 interface {
 	Test(context.Context, *pb.TestRequest) (*pb1.TestResponse, error)
 }
+type TestListener interface {
+	OnEvent(context.Context, *Event) (*Void, error)
+}

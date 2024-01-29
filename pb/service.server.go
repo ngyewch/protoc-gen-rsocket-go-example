@@ -69,3 +69,34 @@ func (s *TestService2Server) HandleRequestResponse(ctx context.Context, reqWrapp
 		return nil, fmt.Errorf("unknown method: %s", reqWrapper.MethodName)
 	}
 }
+
+type TestListenerServer struct {
+	selector uint64
+	service  TestListener
+}
+
+func NewTestListenerServer(selector uint64, service TestListener) *TestListenerServer {
+	return &TestListenerServer{
+		selector: selector,
+		service:  service,
+	}
+}
+func (s *TestListenerServer) Selector() uint64 {
+	return s.selector
+}
+func (s *TestListenerServer) HandleRequestResponse(ctx context.Context, reqWrapper *runtime.RequestWrapper) (proto.Message, error) {
+	if reqWrapper.Selector != s.selector {
+		return nil, runtime.ErrorSelectorMismatch
+	}
+	switch reqWrapper.MethodName {
+	case "OnEvent":
+		var req Event
+		err := proto.Unmarshal(reqWrapper.Payload, &req)
+		if err != nil {
+			return nil, err
+		}
+		return s.service.OnEvent(ctx, &req)
+	default:
+		return nil, fmt.Errorf("unknown method: %s", reqWrapper.MethodName)
+	}
+}

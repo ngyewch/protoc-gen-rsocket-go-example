@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ngyewch/protoc-gen-rsocket-go-example/pb"
 	pb1 "github.com/ngyewch/protoc-gen-rsocket-go-example/pb/request/pb"
+	"github.com/ngyewch/protoc-gen-rsocket-go/runtime"
 	"github.com/rsocket/rsocket-go"
 )
 
@@ -16,12 +17,23 @@ func New() *Client {
 }
 
 func (c *Client) Start(ctx context.Context) error {
+	ctx1, cancel := context.WithCancelCause(ctx)
 	client, err := rsocket.Connect().
+		OnClose(func(err error) {
+			cancel(fmt.Errorf("connection closed: %w", err))
+		}).
+		Acceptor(func(ctx context.Context, socket rsocket.RSocket) rsocket.RSocket {
+			return rsocket.NewAbstractSocket(
+				rsocket.RequestResponse(runtime.RSocketServerRequestResponseHandler(runtime.NewServers(
+					pb.NewTestListenerServer(3, c),
+				))),
+			)
+		}).
 		Transport(rsocket.TCPClient().
 			SetAddr("127.0.0.1:7878").
 			Build(),
 		).
-		Start(ctx)
+		Start(ctx1)
 	if err != nil {
 		return err
 	}
@@ -69,5 +81,11 @@ func (c *Client) Start(ctx context.Context) error {
 		fmt.Printf("%+v\n", rsp)
 	}
 
-	return nil
+	<-ctx1.Done()
+	return ctx1.Err()
+}
+
+func (c *Client) OnEvent(ctx context.Context, event *pb.Event) (*pb.Void, error) {
+	fmt.Printf("<< %s\n", event.Id)
+	return &pb.Void{}, nil
 }

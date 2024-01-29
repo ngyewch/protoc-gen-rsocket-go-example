@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"github.com/ngyewch/protoc-gen-rsocket-go-example/pb"
 	pb1 "github.com/ngyewch/protoc-gen-rsocket-go-example/pb/request/pb"
 	pb2 "github.com/ngyewch/protoc-gen-rsocket-go-example/pb/response/pb"
@@ -9,6 +10,7 @@ import (
 	"github.com/rsocket/rsocket-go"
 	"github.com/rsocket/rsocket-go/payload"
 	"strings"
+	"time"
 )
 
 type Server struct {
@@ -25,6 +27,28 @@ func (s *Server) Start(ctx context.Context) error {
 	)
 	err := rsocket.Receive().
 		Acceptor(func(ctx context.Context, setup payload.SetupPayload, sendingSocket rsocket.CloseableRSocket) (rsocket.RSocket, error) {
+			ctx1, cancel := context.WithCancelCause(ctx)
+			sendingSocket.OnClose(func(err error) {
+				fmt.Println("**** client disconnected")
+				cancel(err)
+			})
+			c := pb.NewRSocketTestListenerClient(3, sendingSocket)
+			go func() {
+				for {
+					_, err := c.OnEvent(ctx1, &pb.Event{
+						Id: time.Now().String(),
+					})
+					if err != nil {
+						fmt.Printf("err: %v\n", err)
+					}
+					select {
+					case <-time.After(5 * time.Second):
+						break
+					case <-ctx1.Done():
+						return
+					}
+				}
+			}()
 			return rsocket.NewAbstractSocket(
 				rsocket.RequestResponse(runtime.RSocketServerRequestResponseHandler(servers)),
 			), nil

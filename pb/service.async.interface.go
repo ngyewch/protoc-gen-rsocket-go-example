@@ -13,3 +13,6 @@ type TestServiceAsync interface {
 type TestService2Async interface {
 	Test(context.Context, *pb.TestRequest) *mo.Future[*pb1.TestResponse]
 }
+type TestListenerAsync interface {
+	OnEvent(context.Context, *Event) *mo.Future[*Void]
+}

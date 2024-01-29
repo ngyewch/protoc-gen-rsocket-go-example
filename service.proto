@@ -13,3 +13,14 @@ service TestService {
 service TestService2 {
   rpc Test(TestRequest) returns (TestResponse);
 }
+
+service TestListener {
+  rpc OnEvent(Event) returns (Void);
+}
+
+message Event {
+  string id = 1;
+}
+
+message Void {
+}

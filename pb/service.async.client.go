@@ -81,3 +81,39 @@ func (c *TestService2ClientAsync) Test(ctx context.Context, req *pb.TestRequest)
 			})
 	})
 }
+
+type TestListenerClientAsync struct {
+	selector uint64
+	handler  runtime.ClientRequestResponseHandlerAsync
+}
+
+func NewTestListenerClientAsync(selector uint64, handler runtime.ClientRequestResponseHandlerAsync) *TestListenerClientAsync {
+	return &TestListenerClientAsync{
+		handler:  handler,
+		selector: selector,
+	}
+}
+func NewRSocketTestListenerClientAsync(selector uint64, rs rsocketgo.RSocket) *TestListenerClientAsync {
+	return &TestListenerClientAsync{
+		handler:  runtime.RSocketClientRequestResponseHandlerAsync(rs),
+		selector: selector,
+	}
+}
+func (c *TestListenerClientAsync) OnEvent(ctx context.Context, req *Event) *mo.Future[*Void] {
+	return mo.NewFuture(func(resolve func(*Void), reject func(error)) {
+		runtime.HandleClientRequestResponseAsync(ctx, c.selector, "OnEvent", req, c.handler).
+			Catch(func(err error) ([]byte, error) {
+				reject(err)
+				return nil, err
+			}).
+			Then(func(rspBytes []byte) ([]byte, error) {
+				var rsp Void
+				err := proto.Unmarshal(rspBytes, &rsp)
+				if err != nil {
+					return nil, err
+				}
+				resolve(&rsp)
+				return rspBytes, nil
+			})
+	})
+}

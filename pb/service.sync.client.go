@@ -68,3 +68,33 @@ func (c *TestService2Client) Test(ctx context.Context, req *pb.TestRequest) (*pb
 	}
 	return &rsp, nil
 }
+
+type TestListenerClient struct {
+	selector uint64
+	handler  runtime.ClientRequestResponseHandler
+}
+
+func NewTestListenerClient(selector uint64, handler runtime.ClientRequestResponseHandler) *TestListenerClient {
+	return &TestListenerClient{
+		handler:  handler,
+		selector: selector,
+	}
+}
+func NewRSocketTestListenerClient(selector uint64, rs rsocketgo.RSocket) *TestListenerClient {
+	return &TestListenerClient{
+		handler:  runtime.RSocketClientRequestResponseHandler(rs),
+		selector: selector,
+	}
+}
+func (c *TestListenerClient) OnEvent(ctx context.Context, req *Event) (*Void, error) {
+	rspBytes, err := runtime.HandleClientRequestResponse(ctx, c.selector, "OnEvent", req, c.handler)
+	if err != nil {
+		return nil, err
+	}
+	var rsp Void
+	err = proto.Unmarshal(rspBytes, &rsp)
+	if err != nil {
+		return nil, err
+	}
+	return &rsp, nil
+}
